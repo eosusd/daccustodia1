@@ -26,13 +26,13 @@ void daccustodian::claimpay(uint64_t payid) {
 
         deferredTrans.actions.emplace_back(
                 action(permission_level{configs().tokenholder, "xfer"_n},
-                       "eosio.token"_n, "transfer"_n,
+                       "vig111111111"_n, "transfer"_n,
                        std::make_tuple(configs().tokenholder, payment_destination, payClaim.quantity, memo)
                 ));
     } else {
         deferredTrans.actions.emplace_back(
                 action(permission_level{configs().tokenholder, "xfer"_n},
-                       name(TOKEN_CONTRACT), "transfer"_n,
+                       name("eosio.token"), "transfer"_n,
                        std::make_tuple(configs().tokenholder, payment_destination, payClaim.quantity, memo)
                 ));
     }

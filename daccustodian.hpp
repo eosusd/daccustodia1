@@ -13,7 +13,7 @@
 #endif
 
 #ifndef TOKEN_CONTRACT
-#define TOKEN_CONTRACT "eosdactokens"
+#define TOKEN_CONTRACT "dactoken1111"
 #endif
 
 #ifndef TRANSFER_DELAY
@@ -32,17 +32,17 @@ struct [[eosio::table("config"), eosio::contract("daccustodian")]] contr_config 
 //    The amount of assets that are locked up by each candidate applying for election.
     asset lockupasset;
 //    The maximum number of votes that each member can make for a candidate.
-    uint8_t maxvotes = 5;
+    uint8_t maxvotes = 8;
 //    Number of custodians to be elected for each election count.
-    uint8_t numelected = 3;
+    uint8_t numelected = 21;
 //    Length of a period in seconds.
 //     - used for pay calculations if an eary election is called and to trigger deferred `newperiod` calls.
-    uint32_t periodlength = 7 * 24 * 60 * 60;
+    uint32_t periodlength = 1 * 24 * 60 * 60;
     // account to have active auth set with all all custodians on the newperiod.
     name authaccount = name{0};
 
     // The contract that holds the fund for the DAC. This is used as the source for custodian pay.
-    name tokenholder = "eosdacthedac"_n;
+    name tokenholder = "dacholding11"_n;
 
     // The contract that will act as the service provider account for the dac. This is used as the source for custodian pay.
     name serviceprovider;
