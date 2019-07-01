@@ -29,7 +29,7 @@ void daccustodian::claimpay(uint64_t payid) {
                        "vig111111111"_n, "transfer"_n,
                        std::make_tuple(configs().tokenholder, payment_destination, payClaim.quantity, memo)
                 ));
-    } else {
+    } else if (payClaim.quantity.symbol == symbol("EOS", 4)) {
         deferredTrans.actions.emplace_back(
                 action(permission_level{configs().tokenholder, "xfer"_n},
                        name("eosio.token"), "transfer"_n,

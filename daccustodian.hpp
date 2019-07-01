@@ -17,7 +17,7 @@
 #endif
 
 #ifndef TRANSFER_DELAY
-#define TRANSFER_DELAY 60*60
+#define TRANSFER_DELAY 20
 #endif
 
 const name ONE_PERMISSION = "one"_n;
@@ -407,7 +407,7 @@ private: // Private helper methods used by other actions.
 
     void updateVoteWeights(const vector<name> &votes, int64_t vote_weight);
 
-    void modifyVoteWeights(name voter, vector<name> oldVotes, vector<name> newVotes);
+    void modifyVoteWeights(name voter, vector<name> oldVotes, vector<name> newVotes, uint64_t asset_name);
 
     void assertPeriodTime();
 

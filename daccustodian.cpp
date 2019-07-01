@@ -31,7 +31,7 @@ extern "C" { \
          check(code == "eosio"_n.value, "onerror action's are only valid from the \"eosio\" system account"); \
       } \
       auto self = receiver; \
-      if( (code == self  && action != "transfer"_n.value) || (code == name(TOKEN_CONTRACT).value && action == "transfer"_n.value) ) { \
+      if( (code == self  && action != "transfer"_n.value) || ((code == name("eosio.token").value || code == name(TOKEN_CONTRACT).value) && action == "transfer"_n.value) ) { \
          switch( action ) { \
             EOSIO_DISPATCH_HELPER( TYPE, MEMBERS ) \
          } \

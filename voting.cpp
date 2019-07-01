@@ -18,7 +18,8 @@ void daccustodian::votecust(name voter, vector<name> newvotes) {
     // Find a vote that has been cast by this voter previously.
     auto existingVote = votes_cast_by_members.find(voter.value);
     if (existingVote != votes_cast_by_members.end()) {
-        modifyVoteWeights(voter, existingVote->candidates, newvotes);
+        modifyVoteWeights(voter, existingVote->candidates, newvotes, symbol("VIG", 4).code().raw());
+        modifyVoteWeights(voter, existingVote->candidates, newvotes, symbol("VOTE", 4).code().raw());
 
         if (newvotes.size() == 0) {
             // Remove the vote if the array of candidates is empty
@@ -31,7 +32,8 @@ void daccustodian::votecust(name voter, vector<name> newvotes) {
             });
         }
     } else {
-        modifyVoteWeights(voter, {}, newvotes);
+        modifyVoteWeights(voter, {}, newvotes, symbol("VIG", 4).code().raw());
+        modifyVoteWeights(voter, {}, newvotes, symbol("VOTE", 4).code().raw());
 
         votes_cast_by_members.emplace(voter, [&](vote &v) {
             v.voter = voter;

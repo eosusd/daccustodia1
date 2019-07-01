@@ -41,11 +41,11 @@ void daccustodian::updateVoteWeights(const vector<name> &votes, int64_t vote_wei
     _currentState.total_votes_on_candidates += votes.size() * vote_weight;
 }
 
-void daccustodian::modifyVoteWeights(name voter, vector<name> oldVotes, vector<name> newVotes) {
+void daccustodian::modifyVoteWeights(name voter, vector<name> oldVotes, vector<name> newVotes, uint64_t asset_name) {
     // This could be optimised with set diffing to avoid remove then add for unchanged votes. - later
     eosio::print("Modify vote weights: ", voter, "\n");
 
-    uint64_t asset_name = configs().lockupasset.symbol.code().raw();
+   //uint64_t asset_name = symbol("VIG", 4).code().raw();
 
     accounts accountstable(name(TOKEN_CONTRACT), voter.value);
     const auto ac = accountstable.find(asset_name);

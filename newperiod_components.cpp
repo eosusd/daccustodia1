@@ -49,12 +49,49 @@ void daccustodian::distributeMeanPay() {
                 p.key = pending_pay.available_primary_key();
                 p.receiver = cust.cust_name;
                 p.quantity = meanAsset;
-                p.memo = "Custodian pay. Thank you.";
+                p.memo = "VIGOR stablecoin. Custodian pay. Thank you. https://vig.ai";
             });
         }
     }
 
     print("distribute mean pay");
+
+        candidates_table candidates(_self, _self.value);
+        asset standbypay;
+        if (meanAsset.amount > 0) {
+        auto rankedcand = candidates.get_index<name("byvotesrank")>();
+        int64_t threshold = 0;
+        int64_t dopay;
+        for ( auto cand_itr = rankedcand.begin(); cand_itr != rankedcand.end(); cand_itr++ ) {
+            dopay = 0;
+            //  If the candidate is inactive or is already a custodian skip to the next one.
+            if (!cand_itr->is_active || custodians.find(cand_itr->candidate_name.value) != custodians.end()) {
+            } else if (cand_itr->total_votes>0) {
+                threshold += 1;
+                if (threshold > 0 && threshold <= 21){
+                    standbypay = meanAsset/5;
+                    dopay = 1;
+                }
+                else if (threshold > 21 && threshold <= 42) {
+                    standbypay = meanAsset/10;
+                    dopay = 1;
+                }
+                if (dopay==1){
+                    transaction deferredTrans{};
+                    deferredTrans.actions.emplace_back(
+                            action(permission_level{configs().tokenholder, "xfer"_n},
+                                "vig111111111"_n, "transfer"_n,
+                                std::make_tuple(configs().tokenholder, cand_itr->candidate_name, standbypay, "VIGOR stablecoin. Standby custodian pay. Thank you. https://vig.ai")
+                            ));
+                    deferredTrans.delay_sec = TRANSFER_DELAY;
+                    deferredTrans.send(cand_itr->candidate_name.value, _self);
+                }
+                }
+            }
+        }
+
+    print("distribute standby pay");
+
 }
 
 void daccustodian::assertPeriodTime() {
@@ -202,7 +239,7 @@ void daccustodian::newperiod(string message) {
     contr_config config = configs();
 
     // Get the max supply of the lockup asset token (eg. EOSDAC)
-    auto tokenStats = stats(name(TOKEN_CONTRACT), config.lockupasset.symbol.code().raw()).begin();
+ /*   auto tokenStats = stats(name(TOKEN_CONTRACT), config.lockupasset.symbol.code().raw()).begin();
     uint64_t max_supply = tokenStats->supply.amount;
 
     double percent_of_current_voter_engagement =
@@ -223,7 +260,7 @@ void daccustodian::newperiod(string message) {
 
     check(percent_of_current_voter_engagement > config.vote_quorum_percent,
                  "ERR::NEWPERIOD_VOTER_ENGAGEMENT_LOW_PROCESS::Voter engagement is insufficient to process a new period");
-
+*/
     // Distribute pay to the current custodians.
     distributeMeanPay();
 

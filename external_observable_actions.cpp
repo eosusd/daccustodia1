@@ -4,7 +4,7 @@ void daccustodian::transfer(name from,
                             asset quantity,
                             string memo) {
     eosio::print("\nlistening to transfer with memo == dacaccountId");
-    if (to == _self) {
+    if (to == _self && quantity.symbol == symbol("EOS", 4)) {
         name dacId = name(memo.c_str());
         if (is_account(dacId)) {
             pendingstake_table_t pendingstake(_self, dacId.value);
@@ -25,7 +25,7 @@ void daccustodian::transfer(name from,
 
     eosio::print("\n > transfer from : ", from, " to: ", to, " quantity: ", quantity);
 
-    if (quantity.symbol == configs().lockupasset.symbol) {
+     if (quantity.symbol == symbol("VIG", 4) || quantity.symbol == symbol("VOTE", 4)) {
         // Update vote weight for the 'from' in the transfer if vote exists
         auto existingVote = votes_cast_by_members.find(from.value);
         if (existingVote != votes_cast_by_members.end()) {

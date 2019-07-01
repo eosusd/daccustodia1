@@ -58,7 +58,7 @@ void daccustodian::unstake(name cand) {
     check(!reg_candidate.is_active, "ERR::UNSTAKE_CANNOT_UNSTAKE_FROM_ACTIVE_CAND::Cannot unstake tokens for an active candidate. Call withdrawcand first.");
 
     check(reg_candidate.custodian_end_time_stamp < time_point_sec(eosio::current_time_point()), "ERR::UNSTAKE_CANNOT_UNSTAKE_UNDER_TIME_LOCK::Cannot unstake tokens before they are unlocked from the time delay.");
-
+    if (reg_candidate.locked_tokens.symbol == symbol("VIG", 4)){
     registered_candidates.modify(reg_candidate, cand, [&](candidate &c) {
         // Ensure the candidate's tokens are not locked up for a time delay period.
         // Send back the locked up tokens
@@ -78,6 +78,27 @@ void daccustodian::unstake(name cand) {
 
         c.locked_tokens = asset(0, configs().lockupasset.symbol);
     });
+    } else if (reg_candidate.locked_tokens.symbol == symbol("EOS", 4)){
+    registered_candidates.modify(reg_candidate, cand, [&](candidate &c) {
+        // Ensure the candidate's tokens are not locked up for a time delay period.
+        // Send back the locked up tokens
+        transaction deferredTrans{};
+
+        deferredTrans.actions.emplace_back(
+        action(permission_level{_self, "xfer"_n},
+               name( "eosio.token" ),
+               "transfer"_n,
+               make_tuple(_self, cand, c.locked_tokens,
+                          string("Returning locked up stake. Thank you."))
+        )
+        );
+
+        deferredTrans.delay_sec = TRANSFER_DELAY;
+        deferredTrans.send(cand.value, _self);
+
+        c.locked_tokens = asset(0, configs().lockupasset.symbol);
+    });
+    }
 }
 
 void daccustodian::resigncust(name cust) {
