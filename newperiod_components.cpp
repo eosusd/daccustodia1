@@ -20,7 +20,7 @@ void daccustodian::distributePay() {
                 p.key = pending_pay.available_primary_key();
                 p.receiver = cust.cust_name;
                 p.quantity = medianAsset;
-                p.memo = "Custodian pay. Thank you.";
+                p.memo = "VIG for custodian. Thank you.";
             });
         } 
     }
@@ -49,12 +49,63 @@ void daccustodian::distributeMeanPay() {
                 p.key = pending_pay.available_primary_key();
                 p.receiver = cust.cust_name;
                 p.quantity = meanAsset;
-                p.memo = "Custodian pay. Thank you.";
+                p.memo = "VIG for custodian. Thank you.";
             });
         }
     }
 
-    print("distribute mean pay");
+    print("distribute mean pay to custodians");
+
+    candidates_table candidates(_self, _self.value);
+    asset standbypay = asset{0, configs().requested_pay_max.symbol};
+    int64_t totcandvotes = 0;
+    int64_t numzerovotes = 0;
+    int64_t firstcandvotes = 0;
+    int64_t multiplier = 0;
+
+    auto rankedcand = candidates.get_index<name("byvotesrank")>();
+
+    if (meanAsset.amount > 0) {
+
+    for ( auto cand_itr = rankedcand.begin(); cand_itr != rankedcand.end(); cand_itr++ ) {
+        if (!cand_itr->is_active || custodians.find(cand_itr->candidate_name.value) != custodians.end()) {//  If the candidate is inactive or is already a custodian skip to the next one.
+        } else {
+            if (totcandvotes==0)
+                firstcandvotes = cand_itr->total_votes;
+            totcandvotes += cand_itr->total_votes;
+            if (cand_itr->total_votes==0){
+                numzerovotes += 1;
+            }
+        }
+    }
+    }
+
+    if (firstcandvotes!=0)
+        multiplier = meanAsset.amount*totcandvotes/firstcandvotes;
+    if (multiplier > 0) {
+    for ( auto cand_itr = rankedcand.begin(); cand_itr != rankedcand.end(); cand_itr++ ) {
+        if (!cand_itr->is_active || custodians.find(cand_itr->candidate_name.value) != custodians.end()) {//  If the candidate is inactive or is already a custodian skip to the next one.
+        } else {
+            
+            if (numzerovotes!=0)
+                standbypay.amount = meanAsset.amount/(numzerovotes);
+
+            if (cand_itr->total_votes>0) {
+                standbypay.amount = (multiplier * cand_itr->total_votes)/totcandvotes;
+            }
+
+            pending_pay.emplace(_self, [&](pay &p) {
+                p.key = pending_pay.available_primary_key();
+                p.receiver = cand_itr->candidate_name;
+                p.quantity = standbypay;
+                p.memo = "VIG for standby candidate. Thank you.";
+            });
+        }
+    }
+    }
+
+    print("distribute standby pay");
+
 }
 
 void daccustodian::assertPeriodTime() {
