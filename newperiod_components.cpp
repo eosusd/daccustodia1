@@ -1,3 +1,4 @@
+#include <math.h> 
 
 void daccustodian::distributePay() {
     custodians_table custodians(_self, _self.value);
@@ -79,9 +80,9 @@ void daccustodian::distributeMeanPay() {
             }
 
             if (cand_itr->total_votes==0)
-                standbypay.amount = meanAsset.amount/numzerovotes;
+                standbypay.amount = meanAsset.amount * pow((double)1.0/(double)firstcandvotes, 2.0) / 5; // 0 Votes get 1/5 of 1 vote
             else
-                standbypay.amount = meanAsset.amount * ((double)cand_itr->total_votes/(double)firstcandvotes);
+                standbypay.amount = meanAsset.amount * pow((double)cand_itr->total_votes/(double)firstcandvotes, 2.0);
 
             pending_pay.emplace(_self, [&](pay &p) {
                 p.key = pending_pay.available_primary_key();
