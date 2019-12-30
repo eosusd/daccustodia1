@@ -80,7 +80,8 @@ void daccustodian::distributeMeanPay() {
             }
 
             if (cand_itr->total_votes==0)
-                standbypay.amount = meanAsset.amount * pow((double)1.0/(double)firstcandvotes, 2.0) / 5; // 0 Votes get 1/5 of 1 vote
+                // Candidates with 0 Votes get minimum between [1/5 of 1 vote payment] and [Custodian payment divided by number of 0 votes]
+                standbypay.amount = std::min<double>((double)meanAsset.amount * pow((double)1.0/(double)firstcandvotes, 2.0) / 5, meanAsset.amount/numzerovotes);
             else
                 standbypay.amount = meanAsset.amount * pow((double)cand_itr->total_votes/(double)firstcandvotes, 2.0);
 
