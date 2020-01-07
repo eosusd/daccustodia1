@@ -414,6 +414,8 @@ private: // Private helper methods used by other actions.
     void distributePay();
     
     void distributeMeanPay();
+    
+    void distributeRequestedPay();
 
     void setCustodianAuths();
 

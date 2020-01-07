@@ -1,4 +1,4 @@
-
+#include <cmath>
 void daccustodian::distributePay() {
     custodians_table custodians(_self, _self.value);
 
@@ -92,6 +92,81 @@ void daccustodian::distributeMeanPay() {
         }
     }
     }
+    print("distribute standby pay");
+}
+
+void daccustodian::distributeRequestedPay() {
+    
+    candidates_table candidates(_self, _self.value);
+    auto rankedcand = candidates.get_index<name("byvotesrank")>();
+    auto byreceiver = pending_pay.get_index<name("byreceiver")>();
+     for ( auto cand_itr = rankedcand.begin(); cand_itr != rankedcand.end(); cand_itr++ ) {
+            // expire pay that is older than 7 periods
+            auto haspay = byreceiver.find(cand_itr->candidate_name.value);
+            if (haspay != byreceiver.end()) {
+                auto litr = byreceiver.lower_bound(cand_itr->candidate_name.value);
+                auto uitr = byreceiver.upper_bound(cand_itr->candidate_name.value);
+                uint32_t count = 0;
+                while (litr != uitr) {
+                    litr++;
+                    count++;
+                }
+                litr = byreceiver.lower_bound(cand_itr->candidate_name.value);
+                int32_t countpay = 0;
+                while (litr != uitr) {
+                    countpay++;
+                    if (count - countpay > 5)
+                        litr = byreceiver.erase(litr);
+                    else
+                        litr++;
+                }
+            }
+    }
+
+    custodians_table custodians(_self, _self.value);
+    for (auto cust: custodians) {
+        // distribute requested pay for latest period
+        if (cust.requestedpay.amount > 0) {
+            pending_pay.emplace(_self, [&](pay &p) {
+                p.key = pending_pay.available_primary_key();
+                p.receiver = cust.cust_name;
+                p.quantity = cust.requestedpay;
+                p.memo = "VIG for custodian. Thank you.";
+            });
+        }
+    }
+    print("distribute mean pay to custodians");
+
+    uint64_t numzerovotes = 0;
+    for (auto cand: candidates)
+        if (cand.is_active && cand.total_votes==0)
+            numzerovotes += 1;
+    asset standbypay = asset{0, configs().requested_pay_max.symbol};
+    uint64_t firstcandvotes = 0;
+    bool firstcand = true;
+    for ( auto cand_itr = rankedcand.begin(); cand_itr != rankedcand.end(); cand_itr++ ) {
+        if (!cand_itr->is_active || custodians.find(cand_itr->candidate_name.value) != custodians.end()) {//  If the candidate is inactive or is already a custodian skip to the next one.
+        } else {
+            // distribute requested pay for latest period
+            if (firstcand) {
+                firstcandvotes = cand_itr->total_votes;
+                firstcand = false;
+            }
+            if (cand_itr->total_votes==0)
+                standbypay.amount = (cand_itr->requestedpay.amount/3)/numzerovotes;
+            else
+                standbypay.amount = cand_itr->requestedpay.amount * std::pow((double)cand_itr->total_votes/(double)firstcandvotes, 2);
+            if (standbypay.amount > 0) {
+                pending_pay.emplace(_self, [&](pay &p) {
+                    p.key = pending_pay.available_primary_key();
+                    p.receiver = cand_itr->candidate_name;
+                    p.quantity = standbypay;
+                    p.memo = "VIG for standby custodian. Thank you.";
+                });
+            }
+        }
+    }
+    
     print("distribute standby pay");
 }
 
@@ -263,7 +338,7 @@ void daccustodian::newperiod(string message) {
                  "ERR::NEWPERIOD_VOTER_ENGAGEMENT_LOW_PROCESS::Voter engagement is insufficient to process a new period");
 
     // Distribute pay to the current custodians.
-    distributeMeanPay();
+    distributeRequestedPay();
 
     // Set custodians for the next period.
     allocateCustodians(false);
